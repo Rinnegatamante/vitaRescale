@@ -36,6 +36,7 @@ target_link_libraries(vitaRescale
   SceDisplay_stub_weak
   SceAppMgr_stub_weak
   SceCtrl_stub_weak
+  SceIofilemgr_stub_weak
   k
   gcc
 )

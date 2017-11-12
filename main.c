@@ -6,18 +6,13 @@
 #include "renderer.h"
 
 #define HOOKS_NUM 1       // Hooked functions num
-#define RES_NUM   4       // Available resolutions
 
 static uint8_t current_hook;
-static SceUID hooks[HOOKS_NUM];
+static SceUID hooks[HOOKS_NUM], fd;
 static tai_hook_ref_t refs[HOOKS_NUM];
 static int timer = 0;
-static char titleid[16];
-static uint16_t w[RES_NUM] = {480, 640, 720, 960};
-static uint16_t h[RES_NUM] = {272, 368, 408, 544};
-static uint8_t i = 0;
-static uint32_t oldpad;
-static uint32_t offset = 0xDEADBEEF;
+static char buf[128], fname[128], titleid[16];
+static uint16_t w3d, h3d, wfb, hfb;
 tai_module_info_t info = {0};
 
 // Simplified generic hooking function
@@ -26,40 +21,38 @@ void hookFunction(uint32_t nid, const void *func){
 	current_hook++;
 }
 
-// Patch game resolution
-void patchResolution(uint32_t addr, uint16_t w, uint16_t h){
-	taiInjectData(info.modid, 1, addr, &w, sizeof(uint16_t));
-	taiInjectData(info.modid, 1, addr+4, &h, sizeof(uint16_t));
+// Patch game resolution functions
+void patchPlainResolution(int seg, uint32_t addr, uint16_t w, uint16_t h){ // Plain resolution value
+	taiInjectData(info.modid, seg, addr, &w, sizeof(uint16_t));
+	taiInjectData(info.modid, seg, addr+4, &h, sizeof(uint16_t));
 	timer = 200;
-	offset = addr;
 }
 
 int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
 	
 	// Updating renderer status
 	updateFramebuf(pParam);
-	
-	// Checking input
-	SceCtrlData pad;
-	sceCtrlPeekBufferPositive(0, &pad, 1);
-	if (offset != 0xDEADBEEF){
-		if ((pad.buttons & SCE_CTRL_LTRIGGER) && (pad.buttons & SCE_CTRL_CROSS) && (pad.buttons & SCE_CTRL_TRIANGLE)){
-			if (!((oldpad & SCE_CTRL_LTRIGGER) && (oldpad & SCE_CTRL_CROSS) && (oldpad & SCE_CTRL_TRIANGLE))){
-				i = (i + 1) % RES_NUM;
-				patchResolution(offset, w[i], h[i]);
-			}
-		}
-	}
-	
+
 	// Drawing info on screen
 	if (timer > 0){
 		setTextColor(0x00FFFFFF);
-		drawStringF(5, 5, "Resolution set at %hux%hu.", w[i], h[i]);
-		drawStringF(5, 25, "SetFrameBuf Resolution: %dx%d.", pParam->width, pParam->height);
+		drawStringF(5, 5, "3D Rendering: %hux%hu.", w3d, h3d);
+		drawStringF(5, 25, "Base Rendering: %hux%hu.", wfb, hfb);
 		timer--;
 	}
 	
-	oldpad = pad.buttons;
+	return TAI_CONTINUE(int, refs[0], pParam, sync);
+}
+
+int sceDisplaySetFrameBuf_patched2(const SceDisplayFrameBuf *pParam, int sync) {
+	
+	// Updating renderer status
+	updateFramebuf(pParam);
+
+	// Drawing info on screen
+	setTextColor(0x00FFFFFF);
+	drawStringF(5, 5, "ERROR: 0x%08X", fd);
+	
 	return TAI_CONTINUE(int, refs[0], pParam, sync);
 }
 
@@ -70,12 +63,29 @@ int module_start(SceSize argc, const void *args) {
 	info.size = sizeof(tai_module_info_t);
 	taiGetModuleInfo(TAI_MAIN_MODULE, &info);
 	
-	// Checking if game is patchable
+	// Getting desired resolution from config file
 	sceAppMgrAppParamGetString(0, 12, titleid , 256);
-	if (strncmp(titleid, "PCSB00048", 9) == 0) patchResolution(0x53E0, w[i], h[i]);      // Ridge Racer (EU)
-	else if (strncmp(titleid, "PCSB00861", 9) == 0) patchResolution(0x77CC, w[i], h[i]); // Digimon Story: Cybersleuth (EU)
+	sprintf(fname, "app0:/vitaRescale.txt");
+	fd = sceIoOpen(fname, SCE_O_RDONLY, 0777);
+	if (fd >= 0){
+		int nbytes = sceIoRead(fd, buf, 128);
+		buf[nbytes] = 0;
+		sceIoClose(fd);
+		sscanf(buf,"%hux%hu;%hux%hu", &wfb, &hfb, &w3d, &h3d);
 	
-	hookFunction(0x7A410B64, sceDisplaySetFrameBuf_patched);
+		// Checking if game is patchable
+		if (strncmp(titleid, "PCSB00048", 9) == 0){       // Ridge Racer (EU)
+			patchPlainResolution(1, 0x53E0, w3d, h3d);      // 3D Rendering
+			patchPlainResolution(1, 0x54A8, wfb, hfb);      // UI Rendering + SetFrameBuf params
+			patchPlainResolution(0, 0x1E7538, wfb, hfb);    // ? (960x544 on retail game)
+		}else if (strncmp(titleid, "PCSB00861", 9) == 0){ // Digimon Story: Cybersleuth (EU)
+			patchPlainResolution(1, 0x77CC, wfb, hfb);      // Full Rendering
+			w3d = wfb;
+			h3d = hfb;
+		}
+	
+		hookFunction(0x7A410B64, sceDisplaySetFrameBuf_patched);
+	}else hookFunction(0x7A410B64, sceDisplaySetFrameBuf_patched2);
 	
 	return SCE_KERNEL_START_SUCCESS;
 }
