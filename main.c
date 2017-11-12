@@ -23,6 +23,7 @@ void hookFunction(uint32_t nid, const void *func){
 
 // Patch game resolution functions
 void patchPlainResolution(int seg, uint32_t addr, uint16_t w, uint16_t h){ // Plain resolution value
+	if ((!w) || (!h)) return;
 	taiInjectData(info.modid, seg, addr, &w, sizeof(uint16_t));
 	taiInjectData(info.modid, seg, addr+4, &h, sizeof(uint16_t));
 	timer = 200;
@@ -36,8 +37,10 @@ int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
 	// Drawing info on screen
 	if (timer > 0){
 		setTextColor(0x00FFFFFF);
-		drawStringF(5, 5, "3D Rendering: %hux%hu.", w3d, h3d);
-		drawStringF(5, 25, "Base Rendering: %hux%hu.", wfb, hfb);
+		if (w3d) drawStringF(5, 5, "3D Rendering: %hux%hu.", w3d, h3d);
+		else drawStringF(5, 5, "3D Rendering: Native");
+		if (wfb) drawStringF(5, 25, "Base Rendering: %hux%hu.", wfb, hfb);
+		else drawStringF(5, 25, "Base Rendering: Native");
 		timer--;
 	}
 	
@@ -76,7 +79,7 @@ int module_start(SceSize argc, const void *args) {
 		// Checking if game is patchable
 		if (strncmp(titleid, "PCSB00048", 9) == 0){       // Ridge Racer (EU)
 			patchPlainResolution(1, 0x53E0, w3d, h3d);      // 3D Rendering
-			patchPlainResolution(1, 0x54A8, wfb, hfb);      // UI Rendering + SetFrameBuf params
+			patchPlainResolution(1, 0x54A8, wfb, hfb);      // SetFrameBuf params
 			patchPlainResolution(0, 0x1E7538, wfb, hfb);    // ? (960x544 on retail game)
 		}else if (strncmp(titleid, "PCSB00861", 9) == 0){ // Digimon Story: Cybersleuth (EU)
 			patchPlainResolution(1, 0x77CC, wfb, hfb);      // Full Rendering
