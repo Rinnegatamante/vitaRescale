@@ -85,6 +85,13 @@ int module_start(SceSize argc, const void *args) {
 			patchPlainResolution(1, 0x77CC, wfb, hfb);      // Full Rendering
 			w3d = wfb;
 			h3d = hfb;
+		}else if(strncmp(titleid, "PCSB00676", 9) == 0{ //The Binding of Isaac : Rebirth (EU)
+			
+			
+		}else if(strncmp(titleid, "PCSE00764", 9) == 0{ //Persona 4 : Dancing All Night (USA)
+			
+		}else if(strncmp(titleid, "PCSE00912", 9) == 0{ //Dragon Quest Builders (USA)
+			
 		}
 	
 		hookFunction(0x7A410B64, sceDisplaySetFrameBuf_patched);
