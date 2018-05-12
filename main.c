@@ -29,6 +29,19 @@ void patchPlainResolution(int seg, uint32_t addr, uint16_t w, uint16_t h){ // Pl
 	timer = 200;
 }
 
+// Patch game width resolution function
+void patchWidthResolution(int seg, uint32_t addr, uint16_t w){
+	if(!w) return;
+	taiInjectData(info.modid, seg, addr, &w, sizeof(uint16_t));
+	timer=200;
+}
+
+// Patch game height resolutioh function
+void patchHeightResolution(int seg, uint32_t addr, uint16_t h){
+	if(!h) return;
+	taiInjectData(info.modid, seg, addr, &h, sizeof(uint16_t));
+	timer=200;	
+}
 int sceDisplaySetFrameBuf_patched(const SceDisplayFrameBuf *pParam, int sync) {
 	
 	// Updating renderer status
@@ -89,7 +102,10 @@ int module_start(SceSize argc, const void *args) {
 			
 			
 		}else if(strncmp(titleid, "PCSE00764", 9) == 0{ //Persona 4 : Dancing All Night (USA)
-			
+			patchWidthResolution(0, 0x2092EC, wfb);
+			patchHeightResolution(0, 0x2092F2, hfb);
+			w3d = wfb;
+			h3d = hfb;
 		}else if(strncmp(titleid, "PCSE00912", 9) == 0{ //Dragon Quest Builders (USA)
 			
 		}
