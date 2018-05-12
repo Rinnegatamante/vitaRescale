@@ -99,8 +99,10 @@ int module_start(SceSize argc, const void *args) {
 			w3d = wfb;
 			h3d = hfb;
 		}else if(strncmp(titleid, "PCSB00676", 9) == 0{ //The Binding of Isaac : Rebirth (EU)
-			
-			
+			patchWidthResolution(0, 0x1428F2, wfb);
+			patchHeightResolution(0, 0x1428F8, hfb);
+			w3d = wfb;
+			h3d = hfb;	
 		}else if(strncmp(titleid, "PCSE00764", 9) == 0{ //Persona 4 : Dancing All Night (USA)
 			patchWidthResolution(0, 0x2092EC, wfb);
 			patchHeightResolution(0, 0x2092F2, hfb);
