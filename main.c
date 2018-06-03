@@ -104,8 +104,7 @@ int module_start(SceSize argc, const void *args) {
 			w3d = wfb;
 			h3d = hfb;	
 		}else if(strncmp(titleid, "PCSE00764", 9) == 0{ //Persona 4 : Dancing All Night (USA)
-			patchWidthResolution(0, 0x2092EC, wfb);
-			patchHeightResolution(0, 0x2092F2, hfb);
+			patchPlainResolution(0, 0x1BA1E4, wfb, hfb);
 			w3d = wfb;
 			h3d = hfb;
 		}else if(strncmp(titleid, "PCSE00912", 9) == 0{ //Dragon Quest Builders (USA)
