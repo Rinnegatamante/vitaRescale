@@ -81,6 +81,18 @@ int module_start(SceSize argc, const void *args) {
 			patchPlainResolution(1, 0x53E0, w3d, h3d);      // 3D Rendering
 			patchPlainResolution(1, 0x54A8, wfb, hfb);      // SetFrameBuf params
 			patchPlainResolution(0, 0x1E7538, wfb, hfb);    // ? (960x544 on retail game)
+		}else if (strncmp(titleid, "PCSB00245", 9) == 0){ // Persona 4 Golden (EU)
+			patchPlainResolution(1, 0xDBCFC, wfb, hfb);
+			w3d = wfb;
+			h3d = hfb;
+		}else if (strncmp(titleid, "PCSE00120", 9) == 0){ // Persona 4 Golden (US)
+			patchPlainResolution(1, 0xDBCEC, wfb, hfb);
+			w3d = wfb;
+			h3d = hfb;
+		}else if (strncmp(titleid, "PCSG00563", 9) == 0){ // Persona 4 Golden (JP)
+			patchPlainResolution(1, 0xDBDA0, wfb, hfb);
+			w3d = wfb;
+			h3d = hfb;
 		}else if (strncmp(titleid, "PCSB00861", 9) == 0){ // Digimon Story: Cybersleuth (EU)
 			patchPlainResolution(1, 0x77CC, wfb, hfb);      // Full Rendering
 			w3d = wfb;
