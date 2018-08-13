@@ -90,7 +90,7 @@ int module_start(SceSize argc, const void *args) {
 			w3d = wfb;
 			h3d = hfb;
 		}else if (strncmp(titleid, "PCSG00563", 9) == 0){ // Persona 4 Golden (JP)
-			patchPlainResolution(1, 0xDBDA0, wfb, hfb);
+			patchPlainResolution(1, 0xDBD9C, wfb, hfb);
 			w3d = wfb;
 			h3d = hfb;
 		}else if (strncmp(titleid, "PCSB00861", 9) == 0){ // Digimon Story: Cybersleuth (EU)
